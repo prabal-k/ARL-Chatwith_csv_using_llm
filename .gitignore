@@ -1,0 +1,10 @@
+model
+vectorstore
+bank
+Diet
+Diet-2
+polluted_cities
+chatwithcsv
+preprocessed-hr-data
+*.csv
+*.xlsx
