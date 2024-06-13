@@ -1,6 +1,6 @@
 # Chat with the CSV file 
 
-Hey Guys, this project using the Quantized 4-Bit llama-2 7b llm model , where the user can answer question about the private data source .
+Hey Guys, this project uses the Quantized 4-Bit llama-2 7b llm model , Where the user can ask question fron their own data source .
 
 # Snapshot 
 
