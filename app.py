@@ -10,22 +10,23 @@ import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import faiss  # Import faiss library
 import numpy as np
+from langchain_community.document_loaders import PyPDFLoader
 
 DB_FAISS_DIR = "vectorstore/db_faiss"  # To store the embedding locally
 DB_FAISS_PATH = os.path.join(DB_FAISS_DIR, "index.faiss")  # Full path to the FAISS index file
-CSV_FILE_PATH = "preprocessed-hr-data.csv"  # Predefined CSV file location
+CSV_FILE_PATH = r"C project report 1.pdf"  # Predefined CSV file location
 
 # Function for Loading the model from the local storage
 def load_llm():
-    llm = CTransformers(model="model/llama-2-7b-chat.ggmlv3.q4_0.bin",
-                        model_type="llama", config={'temperature': 0.7, 'max_new_tokens': 500})
+    llm = CTransformers(model="model\original-metallama-6epoch-graphofloss-2.Q4_1.gguf",
+                        model_type="llama", config={'temperature': 0.7, 'max_new_tokens': 600})
     return llm
 
-st.title("Welcome to chat-chat-chat-gossip")
+st.title("Welcome to chat with PDF")
 
 # Mark down
-st.markdown("<h3 style='text-align: center; color: green;'>Guff garam ekxin aau</h3>",
-            unsafe_allow_html=True)
+# st.markdown("<h3 style='text-align: center; color: green;'>Guff garam ekxin aau</h3>",
+#             unsafe_allow_html=True)
 
 # Ensure the vectorstore directory exists
 os.makedirs(DB_FAISS_DIR, exist_ok=True)
@@ -34,13 +35,13 @@ os.makedirs(DB_FAISS_DIR, exist_ok=True)
 if not os.path.exists(DB_FAISS_PATH):
     try:
         st.title("Creating the embeddings on the fly")
-        loader = CSVLoader(file_path=CSV_FILE_PATH, encoding='utf-8')
+        loader = PyPDFLoader(CSV_FILE_PATH)
 
-        data = loader.load()  # This loads the CSV file data into the data variable
-        st.write(data[0])
+        data = loader.load_and_split()  # This loads the CSV file data into the data variable
+        # st.write(data[1].page_content)
 
         # Splitting text into chunks with overlap
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=0, separators=["\n", ","])
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=30, separators=["\n", ","])
         split_docs = text_splitter.split_documents(data)
 
         # CREATING THE EMBEDDINGS
@@ -67,16 +68,16 @@ if not os.path.exists(DB_FAISS_PATH):
 
 # Load the embeddings
 try:
-    st.title("Embeddings are being loaded")
+    # st.title("Embeddings are being loaded")
     
     # Load FAISS index
     index = faiss.read_index(DB_FAISS_PATH)
     embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2')
     
     # Load documents and create LangChain FAISS vector store
-    loader = CSVLoader(file_path=CSV_FILE_PATH, encoding='utf-8')
+    loader = PyPDFLoader(file_path=CSV_FILE_PATH)
     data = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=0, separators=["\n", ","])
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=30, separators=["\n", ","])
     split_docs = text_splitter.split_documents(data)
     
     db = FAISS.from_documents(split_docs, embeddings)
@@ -93,7 +94,7 @@ if 'db' in locals():
     prompt_template = PromptTemplate(
         input_variables=["question", "context"],
         template=(
-            "You are a knowledgeable assistant with access to a CSV dataset. "
+            "You are a knowledgeable assistant with access to a pdf data. "
             "Based on the given context, answer the question accurately. "
             "Question: {question}\n\n"
             "Context:\n{context}\n"
@@ -105,13 +106,13 @@ if 'db' in locals():
     # Function for chat
     def conversational_chat(query):
         user_embedding = embeddings.embed_query(query)
-        _, indices = index.search(np.array([user_embedding]).astype(np.float32), 10)
+        _, indices = index.search(np.array([user_embedding]).astype(np.float32), k=8)
         context_docs = [split_docs[i] for i in indices[0]]
 
         # Print context documents for debugging
-        st.write("Context Documents:")
-        for i, doc in enumerate(context_docs):
-            st.write(f"Document {i + 1}:\n{doc.page_content}\n")
+        # st.write("Context Documents:")
+        # for i, doc in enumerate(context_docs):
+        #     st.write(f"Document {i + 1}:\n{doc.page_content}\n")
 
         context = "\n".join([doc.page_content for doc in context_docs])
         # Check the token length and truncate context if necessary
@@ -128,7 +129,7 @@ if 'db' in locals():
         }
 
         # Print the inputs for debugging
-        st.write("Formatted Prompt Inputs:", inputs)
+        # st.write("Formatted Prompt Inputs:", inputs)
 
         # Run the chain with formatted inputs
         result = chain.run(**inputs)
@@ -145,10 +146,10 @@ if 'db' in locals():
         st.session_state['history'] = []
 
     if 'generated' not in st.session_state:
-        st.session_state['generated'] = ["Hello! Ask me anything about the CSV data 🤗"]
+        st.session_state['generated'] = ["Hello! Ask me anything about the PDF: 🤗"]
 
     if 'past' not in st.session_state:
-        st.session_state['past'] = ["Hey! 👋"]
+        st.session_state['past'] = ["🤖 Hey! 👋"]
 
     # Container for the chat history
     response_container = st.container()
@@ -157,7 +158,7 @@ if 'db' in locals():
 
     with container:
         with st.form(key='my_form', clear_on_submit=True):
-            user_input = st.text_input("Query:", placeholder="Talk to your CSV data here (:", key='input')
+            user_input = st.text_input("Query:", placeholder="Talk to your document here (:", key='input')
             submit_button = st.form_submit_button(label='Send')
 
         if submit_button and user_input:
