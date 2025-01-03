@@ -13,7 +13,7 @@ Hey Guys, this project uses the Quantized 4-Bit llama-2 7b llm model , Where the
 ![ss-2](https://github.com/prabal-k/ARL-Chatwith_csv_using_llm/assets/91243958/fc5c12ff-a619-4d64-a19d-78e8e9271522)
 
 
-
+#________________________________________________________________________________________________________________________________________________________________________________
 
 ![pdf_ss-1](https://github.com/user-attachments/assets/dc419300-44c9-4ce9-aea6-4271c6eb3819)
 
