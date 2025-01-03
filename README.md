@@ -22,6 +22,3 @@
 ![pdf_ss-1](https://github.com/user-attachments/assets/dc419300-44c9-4ce9-aea6-4271c6eb3819)
 
 
-
-
-![pdf_ss-3](https://github.com/user-attachments/assets/e108b467-da92-481c-b557-ae80637d07f1)
